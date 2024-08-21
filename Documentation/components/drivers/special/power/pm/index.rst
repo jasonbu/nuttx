@@ -221,8 +221,28 @@ All PM interfaces are declared in the file ``include/nuttx/power/pm.h``.
   completes the entire state change unless interrupts are disabled
   throughout the state change.
 
+.. c:function:: void pm_idle(pm_idle_handler_t handler)
+
+  This function provide standard pm idle work flow for up_idle.
+  Called from the chip bsp and should only focus on handle the system
+  state changed.
+
+  :param handler: The execution after PM_IDLE_DOMAIN state changed
+
+  :return:
+     None
+
 Callbacks
 =========
+
+.. c:var:: typedef void (*pm_idle_handler_t)(enum pm_state_e)
+
+  This type declare is provide for pm_idle interface.
+  Handle the pm low power action and execution for not SMP case.
+  Possible execution for long time because of WFI inside.
+
+    :param pm_state_e:
+       Indicate the new system power state.
 
 .. c:struct:: pm_callback_s
 
