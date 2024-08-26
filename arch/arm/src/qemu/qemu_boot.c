@@ -63,6 +63,14 @@ static char g_syslog_rpmsg_buf[4096];
 #endif
 
 /****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+#ifdef CONFIG_BMP
+unsigned long g_cpu_data_size;
+#endif
+
+/****************************************************************************
  * Public Functions
  ****************************************************************************/
 
@@ -76,6 +84,13 @@ static char g_syslog_rpmsg_buf[4096];
 
 void arm_boot(void)
 {
+  /* Bound Multi-Processing init */
+
+#ifdef CONFIG_BMP
+  int i;
+  g_cpu_data_size = (uintptr_t)g_idle_topstack - (uintptr_t)_sdata;
+#endif
+
 #ifdef CONFIG_ARCH_PERF_EVENTS
   /* Perf init */
 
@@ -96,7 +111,15 @@ void arm_boot(void)
 
   arm_fpuconfig();
 
-#ifdef CONFIG_ARM_PSCI
+#ifdef USE_EARLYSERIALINIT
+  /* Perform early serial initialization if we are going to use the serial
+   * driver.
+   */
+
+  arm_earlyserialinit();
+#endif
+
+#if defined(CONFIG_ARM_HAVE_PSCI)
   arm_psci_init("hvc");
 #endif
 
@@ -104,12 +127,12 @@ void arm_boot(void)
   fdt_register((const char *)0x40000000);
 #endif
 
-#ifdef USE_EARLYSERIALINIT
-  /* Perform early serial initialization if we are going to use the serial
-   * driver.
-   */
-
-  arm_earlyserialinit();
+#ifdef CONFIG_BMP
+  for (i = 1; i < CONFIG_BMP_NCPUS; i++)
+    {
+      memcpy((void *)((uintptr_t)_sdata + g_cpu_data_size * i),
+             _sdata, g_cpu_data_size);
+    }
 #endif
 
 #ifdef CONFIG_SYSLOG_RPMSG
@@ -124,6 +147,11 @@ void arm_boot(void)
   /* dont return per armv7-r/arm_head.S design */
 
   nx_start();
+#endif
+
+#ifdef CONFIG_BMP
+void qemu_cpu_enable(void);
+  qemu_cpu_enable();
 #endif
 }
 
@@ -143,6 +171,12 @@ int up_cpu_start(int cpu)
           (uint32_t *)PGTABLE_BASE_VADDR, PGTABLE_SIZE);
   UP_DSB();
 #endif
+
+  /* Now we can enable all other CPUs.  The enabled CPUs will start execution
+   * at __cpuN_start and, after very low-level CPU initialization has been
+   * performed, will branch to arm_cpu_boot()
+   * (see arch/arm/src/armv7-a/smp.h)
+   */
 
   return psci_cpu_on(cpu, (uintptr_t)__start);
 }

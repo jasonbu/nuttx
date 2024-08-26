@@ -31,6 +31,7 @@
 
 #include <nuttx/arch.h>
 #include <nuttx/sched.h>
+#include <nuttx/init.h>
 #include <arch/irq.h>
 
 #include "init/init.h"
@@ -38,6 +39,29 @@
 #include "sctlr.h"
 #include "scu.h"
 #include "gic.h"
+#include "mmu.h"
+#include "arm_cpu_psci.h"
+#include "smp.h"
+
+#if defined(CONFIG_SMP) || defined(CONFIG_BMP)
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static const start_t g_cpu_boot[CONFIG_NR_CPUS] =
+{
+  0,
+#if CONFIG_NR_CPUS > 1
+  __cpu1_start,
+#endif
+#if CONFIG_NR_CPUS > 2
+  __cpu2_start,
+#endif
+#if CONFIG_NR_CPUS > 3
+  __cpu3_start
+#endif
+};
 
 /* Symbols defined via the linker script */
 
@@ -46,6 +70,37 @@ extern uint8_t _vector_start[]; /* Beginning of vector block */
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
+/****************************************************************************
+ * Name: qemu_cpu_enable
+ *
+ * Description:
+ *   Called from CPU0 to enable all other CPUs.  The enabled CPUs will start
+ *   execution at __cpuN_start and, after very low-level CPU initialization
+ *   has been performed, will branch to arm_cpu_boot()
+ *   (see arch/arm/src/armv7-a/smp.h)
+ *
+ * Input Parameters:
+ *   None
+ *
+ * Returned Value:
+ *   None
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_BMP
+void qemu_cpu_enable(void)
+{
+  int cpu;
+
+  for (cpu = 1; cpu < CONFIG_BMP_NCPUS; cpu++)
+    {
+      /* Then enable the CPU */
+
+      psci_cpu_on(CORE_TO_MPID(cpu, 0), (uintptr_t)g_cpu_boot[cpu]);
+    }
+}
+#endif
 
 /****************************************************************************
  * Name: arm_cpu_boot
@@ -68,7 +123,6 @@ extern uint8_t _vector_start[]; /* Beginning of vector block */
  *
  ****************************************************************************/
 
-#ifdef CONFIG_SMP
 void arm_cpu_boot(int cpu)
 {
   /* Enable SMP cache coherency for the CPU */
@@ -112,6 +166,17 @@ void arm_cpu_boot(int cpu)
 
   /* Then transfer control to the IDLE task */
 
+#ifdef CONFIG_BMP
+#  undef g_nx_initstate
+  while (g_nx_initstate != OSINIT_IDLELOOP);
+
+  nx_start();
+#else
   nx_idle_trampoline();
+  for (; ; )
+    {
+      asm("WFI");
+    }
+#endif
 }
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_SMP || CONFIG_BMP */
