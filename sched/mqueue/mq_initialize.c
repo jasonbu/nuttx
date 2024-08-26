@@ -70,13 +70,17 @@ struct msgpool_s
  * item.
  */
 
+#undef g_msgfree
 struct list_node g_msgfree;
+#define g_msgfree this_cpu_var(g_msgfree)
 
 /* The g_msgfreeInt is a list of messages that are reserved for use by
  * interrupt handlers.
  */
 
+#undef g_msgfreeirq
 struct list_node g_msgfreeirq;
+#define g_msgfreeirq this_cpu_var(g_msgfreeirq)
 
 spinlock_t g_msgfreelock = SP_UNLOCKED;
 
@@ -89,6 +93,7 @@ spinlock_t g_msgfreelock = SP_UNLOCKED;
 /* This is a pool of pre-allocated message queue buffers */
 
 static struct msgpool_s g_msgpool;
+#define g_msgpool this_cpu_var(g_msgpool)
 
 /****************************************************************************
  * Private Functions

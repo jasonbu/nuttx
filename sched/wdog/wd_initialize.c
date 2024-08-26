@@ -34,6 +34,7 @@
  * Public Data
  ****************************************************************************/
 
+#undef g_wdspinlock
 spinlock_t g_wdspinlock = SP_UNLOCKED;
 
 /* The g_wdactivelist data structure is a singly linked list ordered by
@@ -41,6 +42,7 @@ spinlock_t g_wdspinlock = SP_UNLOCKED;
  * this linked list are removed and the function is called.
  */
 
+#undef g_wdactivelist
 struct list_node g_wdactivelist = LIST_INITIAL_VALUE(g_wdactivelist);
 
 /****************************************************************************

@@ -53,7 +53,9 @@
 
 #if !defined(CONFIG_SCHED_TICKLESS) && \
     !defined(CONFIG_ALARM_ARCH) && !defined(CONFIG_TIMER_ARCH)
+#undef g_system_ticks
 volatile clock_t g_system_ticks = INITIAL_SYSTEM_TIMER_TICKS;
+#define g_system_ticks this_cpu_var(g_system_ticks)
 #endif
 
 #ifndef CONFIG_CLOCK_TIMEKEEPING

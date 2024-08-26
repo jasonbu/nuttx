@@ -29,6 +29,7 @@
 #include <time.h>
 
 #include <nuttx/clock.h>
+#include <nuttx/sched.h>
 
 /****************************************************************************
  * Public Functions

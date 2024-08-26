@@ -30,6 +30,7 @@
 #include <nuttx/config.h>
 #include <nuttx/compiler.h>
 
+#include <sys/types.h>
 #include <stdint.h>
 
 /****************************************************************************
@@ -93,6 +94,7 @@ extern "C"
  */
 
 EXTERN volatile uint8_t g_nx_initstate;  /* See enum nx_initstate_e */
+#define g_nx_initstate this_cpu_var(g_nx_initstate)
 
 /****************************************************************************
  * Public Function Prototypes

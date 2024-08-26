@@ -81,6 +81,7 @@
 #if defined(CONFIG_SCHED_HPWORK)
 /* The state of the kernel mode, high priority work queue(s). */
 
+#undef g_hpwork
 struct hp_wqueue_s g_hpwork =
 {
   {
@@ -93,11 +94,14 @@ struct hp_wqueue_s g_hpwork =
   }
 };
 
+#define g_hpwork this_cpu_var(g_hpwork)
+
 #endif /* CONFIG_SCHED_HPWORK */
 
 #if defined(CONFIG_SCHED_LPWORK)
 /* The state of the kernel mode, low priority work queue(s). */
 
+#undef g_lpwork
 struct lp_wqueue_s g_lpwork =
 {
   {
@@ -109,6 +113,7 @@ struct lp_wqueue_s g_lpwork =
     CONFIG_SCHED_LPNTHREADS,
   }
 };
+#define g_lpwork this_cpu_var(g_lpwork)
 
 #endif /* CONFIG_SCHED_LPWORK */
 
@@ -550,13 +555,18 @@ int work_queue_priority(int qid)
 #ifdef CONFIG_SCHED_HPWORK
 int work_start_highpri(void)
 {
+  FAR struct kwork_wqueue_s *wq = &g_hpwork.wq;
   /* Start the high-priority, kernel mode worker thread(s) */
 
   sinfo("Starting high-priority kernel worker thread(s)\n");
 
+  /* For BMP compile time init will make cpun point to cpu0 */
+
+  list_initialize(&wq->expired);
+  list_initialize(&wq->pending);
+
   return work_thread_create(HPWORKNAME, CONFIG_SCHED_HPWORKPRIORITY, NULL,
-                            CONFIG_SCHED_HPWORKSTACKSIZE,
-                            (FAR struct kwork_wqueue_s *)&g_hpwork);
+                            CONFIG_SCHED_HPWORKSTACKSIZE, wq);
 }
 #endif /* CONFIG_SCHED_HPWORK */
 
@@ -578,13 +588,19 @@ int work_start_highpri(void)
 #ifdef CONFIG_SCHED_LPWORK
 int work_start_lowpri(void)
 {
+  FAR struct kwork_wqueue_s *wq = &g_lpwork.wq;
+
   /* Start the low-priority, kernel mode worker thread(s) */
 
   sinfo("Starting low-priority kernel worker thread(s)\n");
 
+  /* For BMP compile time init will make cpun point to cpu0 */
+
+  list_initialize(&wq->expired);
+  list_initialize(&wq->pending);
+
   return work_thread_create(LPWORKNAME, CONFIG_SCHED_LPWORKPRIORITY, NULL,
-                            CONFIG_SCHED_LPWORKSTACKSIZE,
-                            (FAR struct kwork_wqueue_s *)&g_lpwork);
+                            CONFIG_SCHED_LPWORKSTACKSIZE, wq);
 }
 #endif /* CONFIG_SCHED_LPWORK */
 

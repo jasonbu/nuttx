@@ -77,6 +77,7 @@ struct posix_timer_s
 /* This is a list of free, preallocated timer structures */
 
 extern volatile sq_queue_t g_freetimers;
+#define g_freetimers       this_cpu_var(g_freetimers)
 #endif
 
 /* This is a list of instantiated timer structures -- active and inactive.
@@ -85,6 +86,7 @@ extern volatile sq_queue_t g_freetimers;
  */
 
 extern volatile sq_queue_t g_alloctimers;
+#define g_alloctimers      this_cpu_var(g_alloctimers)
 
 extern spinlock_t g_locktimers;
 

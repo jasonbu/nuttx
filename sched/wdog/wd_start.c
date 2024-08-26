@@ -91,6 +91,7 @@
 
 #ifdef CONFIG_SCHED_TICKLESS
 static unsigned int g_wdtimernested;
+#define g_wdtimernested this_cpu_var(g_wdtimernested)
 #endif
 
 /****************************************************************************

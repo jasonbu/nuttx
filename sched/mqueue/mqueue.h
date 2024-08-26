@@ -95,12 +95,14 @@ extern "C"
  */
 
 EXTERN struct list_node g_msgfree;
+#define g_msgfree       this_cpu_var(g_msgfree)
 
 /* The g_msgfreeirq is a list of messages that are reserved for use by
  * interrupt handlers.
  */
 
 EXTERN struct list_node g_msgfreeirq;
+#define g_msgfreeirq    this_cpu_var(g_msgfreeirq)
 
 EXTERN spinlock_t g_msgfreelock;
 

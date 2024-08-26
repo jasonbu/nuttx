@@ -42,6 +42,7 @@
  ****************************************************************************/
 
 static rw_semaphore_t g_inode_lock = RWSEM_INITIALIZER;
+#define g_inode_lock this_cpu_var(g_inode_lock)
 
 /****************************************************************************
  * Public Functions

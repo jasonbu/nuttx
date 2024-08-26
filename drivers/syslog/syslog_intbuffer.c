@@ -71,6 +71,7 @@ static struct syslog_intbuffer_s g_syslog_intbuffer =
                       sizeof(g_syslog_intbuffer.buffer)),
   SP_UNLOCKED,
 };
+#define g_syslog_intbuffer this_cpu_var(g_syslog_intbuffer)
 
 /****************************************************************************
  * Private Functions

@@ -36,6 +36,7 @@
 #include <nuttx/clock.h>
 #include <nuttx/queue.h>
 #include <nuttx/wdog.h>
+#include <nuttx/sched.h>
 #include <nuttx/list.h>
 #include <nuttx/spinlock_type.h>
 
@@ -65,7 +66,10 @@ extern "C"
  */
 
 extern struct list_node g_wdactivelist;
+#define g_wdactivelist this_cpu_var(g_wdactivelist)
+
 extern spinlock_t g_wdspinlock;
+#define g_wdspinlock this_cpu_var(g_wdspinlock)
 
 /****************************************************************************
  * Public Function Prototypes
