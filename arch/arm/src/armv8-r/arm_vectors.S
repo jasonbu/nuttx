@@ -28,6 +28,8 @@
 #include <nuttx/irq.h>
 
 #include "arm.h"
+#include "cp15.h"
+#include "chip.h"
 
 	.file	"arm_vectors.S"
 
@@ -44,6 +46,21 @@
  ****************************************************************************/
 
 /****************************************************************************
+ * Name: cpuindex
+ *
+ * Description:
+ *   Return an index idenifying the current CPU.  Single CPU case.  Must be
+ *   provided by MCU-specific logic in chip.h for the SMP case.
+ *
+ ****************************************************************************/
+
+#if !defined(CONFIG_SMP) && !defined(CONFIG_BMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
+	.macro	cpuindex, index
+	.mov		\index, #0
+	.endm
+#endif
+
+/****************************************************************************
  * Name: setirqstack
  *
  * Description:
@@ -52,7 +69,7 @@
  *
  ****************************************************************************/
 
-#if !defined(CONFIG_SMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
+#if !defined(CONFIG_SMP) && !defined(CONFIG_BMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
 	.macro	setirqstack, tmp1, tmp2
 	ldr		sp, .Lirqstacktop		/* SP = IRQ stack top */
 	.endm
@@ -67,7 +84,7 @@
  *
  ****************************************************************************/
 
-#if !defined(CONFIG_SMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
+#if !defined(CONFIG_SMP) && !defined(CONFIG_BMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
 	.macro	setfiqstack, tmp1, tmp2
 	ldr		sp, .Lfiqstacktop		/* SP = FIQ stack top */
 	.endm
@@ -247,7 +264,7 @@ arm_vectorirq:
 
 	rfeia		r14
 
-#if !defined(CONFIG_SMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
+#if !defined(CONFIG_SMP) && !defined(CONFIG_BMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
 .Lirqstacktop:
 	.word	g_intstacktop
 #endif
@@ -707,7 +724,7 @@ arm_vectorfiq:
 
 	rfeia		r14
 
-#if !defined(CONFIG_SMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
+#if !defined(CONFIG_SMP) && !defined(CONFIG_BMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
 .Lfiqstacktop:
 	.word	g_fiqstacktop
 #endif
@@ -737,7 +754,7 @@ arm_vectoraddrexcptn:
  *  Name: g_intstackalloc/g_intstacktop
  ****************************************************************************/
 
-#if !defined(CONFIG_SMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
+#if !defined(CONFIG_SMP) && !defined(CONFIG_BMP) && CONFIG_ARCH_INTERRUPTSTACK > 7
 	.bss
 	.balign	8
 

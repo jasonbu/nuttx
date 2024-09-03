@@ -70,7 +70,9 @@
 /* Redistributor base addresses for each core */
 
 static unsigned long g_gic_rdists[CONFIG_SMP_NCPUS];
+#define g_gic_rdists this_cpu_var(g_gic_rdists)
 static volatile spinlock_t g_gic_lock = SP_UNLOCKED;
+#define g_gic_lock this_cpu_var(g_gic_lock)
 
 /***************************************************************************
  * Private Functions
@@ -976,21 +978,24 @@ int arm_gic_initialize(void)
 {
   int err;
 
-  err = gic_validate_dist_version();
-  if (err)
+  if (up_cpu_index() == 0)
     {
-      sinfo("no distributor detected, giving up ret=%d\n", err);
-      return err;
-    }
+      err = gic_validate_dist_version();
+      if (err)
+        {
+          sinfo("no distributor detected, giving up ret=%d\n", err);
+          return err;
+        }
 
-  gicv3_dist_init();
+      gicv3_dist_init();
+    }
 
   arm_gic_init();
 
   return 0;
 }
 
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) || defined(CONFIG_BMP)
 void arm_gic_secondary_init(void)
 {
   arm_gic_init();
