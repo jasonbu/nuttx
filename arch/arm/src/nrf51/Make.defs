@@ -1,0 +1,5 @@
+# Makefile fragment for Nordic nRF51
+
+CHIP_CSRCS  = nrf51_start.c
+CHIP_CSRCS += nrf51_serial.c
+

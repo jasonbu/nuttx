@@ -304,18 +304,28 @@ config ARCH_CHIP_MAX326XX
 		Maxim Integrated MAX326XX microcontrollers (ARM Cortex-M4F).
 
 config ARCH_CHIP_MOXART
-	bool "MoxART"
-	select ARCH_ARM7TDMI
-	select ARCH_HAVE_RESET
-	select ARCH_HAVE_SERIAL_TERMIOS
-	---help---
-		MoxART family
+        bool "MoxART"
+        select ARCH_ARM7TDMI
+        select ARCH_HAVE_RESET
+        select ARCH_HAVE_SERIAL_TERMIOS
+        ---help---
+                MoxART family
+
+config ARCH_CHIP_NRF51
+        bool "Nordic nRF51"
+        select ARCH_CORTEXM0
+        select ARCH_HAVE_TICKLESS
+        select ARCH_HAVE_SERIAL_TERMIOS
+        select ARM_SEMIHOSTING
+        select ARM_SEMIHOSTING_SYSLOG
+        ---help---
+                Nordic nRF51 architectures (ARM Cortex-M0).
 
 config ARCH_CHIP_NRF52
-	bool "Nordic nRF52"
-	select ARCH_CORTEXM4
-	select ARCH_HAVE_TICKLESS
-	select ARMV7M_HAVE_STACKCHECK
+        bool "Nordic nRF52"
+        select ARCH_CORTEXM4
+        select ARCH_HAVE_TICKLESS
+        select ARMV7M_HAVE_STACKCHECK
 	#select ARCH_HAVE_MPU
 	#select ARM_HAVE_MPU_UNIFIED
 	select ARCH_HAVE_SPI_BITORDER
@@ -1648,6 +1658,9 @@ source "arch/arm/src/max326xx/Kconfig"
 endif
 if ARCH_CHIP_MOXART
 source "arch/arm/src/moxart/Kconfig"
+endif
+if ARCH_CHIP_NRF51
+source "arch/arm/src/nrf51/Kconfig"
 endif
 if ARCH_CHIP_NRF52
 source "arch/arm/src/nrf52/Kconfig"

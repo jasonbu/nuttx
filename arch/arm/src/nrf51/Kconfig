@@ -1,0 +1,14 @@
+# Kconfig for Nordic nRF51 support
+
+if ARCH_CHIP_NRF51
+
+config NRF51_HAVE_UART
+bool "Enable semihosting backed UART"
+default y
+select ARM_SEMIHOSTING
+select ARM_SEMIHOSTING_SYSLOG
+---help---
+Use ARM semihosting channel for basic console I/O when
+running under QEMU micro:bit.
+
+endif
