@@ -101,13 +101,43 @@ rem Check if we have to build configure.exe
 
 if exist configure.exe goto :HaveConfigureExe
 
-set cc=mingw32-gcc.exe
+rem Auto-detect an available GCC (try gcc.exe first for MSYS2/MinGW-w64,
+rem then fall back to the legacy mingw32-gcc.exe)
+
+set cc=
 set cflags=-Wall -Wstrict-prototypes -Wshadow -g -I. -DCONFIG_WINDOWS_NATIVE=y
+
+where gcc.exe >nul 2>&1
+if not errorlevel 1 (
+  set cc=gcc.exe
+  goto :HaveCc
+)
+
+where mingw32-gcc.exe >nul 2>&1
+if not errorlevel 1 (
+  set cc=mingw32-gcc.exe
+  goto :HaveCc
+)
+
+echo ERROR: No suitable C compiler found.
+echo configure.c requires a GCC-compatible compiler (gcc.exe or mingw32-gcc.exe).
+echo.
+echo If you do not have MSYS2 or MinGW installed, use the CMake-based workflow instead:
+echo.
+echo   cmake -B build -DBOARD_CONFIG=^<board^>:^<config^>
+echo   cmake --build build --target menuconfig
+echo.
+echo Install Python kconfiglib before using CMake:
+echo   pip install kconfiglib
+echo   pip install windows-curses
+goto End
+
+:HaveCc
 echo %cc% %cflags% -o configure.exe configure.c cfgparser.c
 %cc% %cflags% -o configure.exe configure.c cfgparser.c
 if errorlevel 1 (
   echo ERROR: %cc% failed
-  echo Is mingw32-gcc.exe installed?  Is it in the PATH variable?
+  echo Is %cc% installed?  Is it in the PATH variable?
   goto End
 )
 
@@ -123,7 +153,8 @@ echo Missing ^<board-name^>:^<config-name^> argument
 :ShowUsage
 echo USAGE: %0 [-d] [-E] [-e] [-b|f] [-a ^<app-dir^>] ^<board-name^>:^<config-name^>
 echo        %0 [-h]
-echo\nWhere:
+echo.
+echo Where:
 echo  -d:
 echo    Enables debug output
 echo  -E:
