@@ -121,6 +121,7 @@ where kconfig-conf.exe >nul 2>&1
 if not errorlevel 1 goto :DoAction
 
 echo ERROR: Cannot find kconfig tools (kconfig-conf.exe / kconfig-mconf.exe).
+echo kconfig-conf / kconfig-mconf are POSIX tools and are not available for MSVC.
 echo.
 echo Options:
 echo   1. Install MSYS2 from https://www.msys2.org and run:
@@ -130,10 +131,24 @@ echo.
 echo   2. Pass the Cygwin installation directory explicitly:
 echo        %0 %action% -c ^<cygwindir^>
 echo.
-echo   3. Use the CMake-based workflow instead (no MSYS2/Cygwin required):
-echo        pip install kconfiglib windows-curses
-echo        cmake -B build -DBOARD_CONFIG=^<board^>:^<config^>
-echo        cmake --build build --target menuconfig
+echo   3. Use the CMake-based workflow instead (no MSYS2/Cygwin required,
+echo      works with MSVC or any toolchain):
+echo.
+echo        pip install kconfiglib
+echo.
+
+where cl.exe >nul 2>&1
+if not errorlevel 1 (
+  echo        cmake -B build -DBOARD_CONFIG=^<board^>:^<config^> -G"Visual Studio 17 2022" -A x64
+  echo        cmake --build build --target menuconfig
+  echo.
+  echo        ^(menuconfig uses Python guiconfig/Tkinter on Windows -- no windows-curses needed^)
+) else (
+  echo        cmake -B build -DBOARD_CONFIG=^<board^>:^<config^> -GNinja
+  echo        cmake --build build --target menuconfig
+  echo.
+  echo        ^(menuconfig uses Python guiconfig/Tkinter on Windows -- no windows-curses needed^)
+)
 goto End
 
 :DoAction
@@ -173,9 +188,10 @@ echo  ^<msysdir^> is an optional MSYS2 installation directory. If specified,
 echo    the path must exist.
 echo.
 echo  If no MSYS2 or Cygwin is installed, use the CMake-based workflow:
-echo    pip install kconfiglib windows-curses
+echo    pip install kconfiglib
 echo    cmake -B build -DBOARD_CONFIG=^<board^>:^<config^>
 echo    cmake --build build --target menuconfig
+echo  ^(windows-curses is NOT needed for the CMake guiconfig path^)
 
 rem Restore the original PATH settings
 

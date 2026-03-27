@@ -121,15 +121,40 @@ if not errorlevel 1 (
 
 echo ERROR: No suitable C compiler found.
 echo configure.c requires a GCC-compatible compiler (gcc.exe or mingw32-gcc.exe).
+echo configure.c cannot be compiled by MSVC (cl.exe) due to POSIX-only headers.
 echo.
-echo If you do not have MSYS2 or MinGW installed, use the CMake-based workflow instead:
+echo Use the CMake-based workflow instead (works with MSVC, MinGW-w64, and no MSYS2):
 echo.
-echo   cmake -B build -DBOARD_CONFIG=^<board^>:^<config^>
-echo   cmake --build build --target menuconfig
+echo   Step 1 - Install Python kconfiglib (required for all platforms):
+echo     pip install kconfiglib
 echo.
-echo Install Python kconfiglib before using CMake:
-echo   pip install kconfiglib
-echo   pip install windows-curses
+
+where cl.exe >nul 2>&1
+if not errorlevel 1 (
+  echo   Step 2 - Configure with CMake using the Visual Studio generator:
+  echo     ^(choose -A x64 for 64-bit target or -A Win32 for 32-bit target^)
+  echo     cmake -B build -DBOARD_CONFIG=^<board^>:^<config^> -G"Visual Studio 17 2022" -A x64
+  echo     cmake -B build -DBOARD_CONFIG=^<board^>:^<config^> -G"Visual Studio 17 2022" -A Win32
+  echo.
+  echo   Step 3 - Open the GUI Kconfig editor ^(uses Python Tkinter, no extra install^):
+  echo     cmake --build build --target menuconfig
+  echo.
+  echo   Step 4 - Build:
+  echo     cmake --build build
+) else (
+  echo   Step 2 - Configure with CMake ^(install Ninja or use -G"Ninja"^):
+  echo     cmake -B build -DBOARD_CONFIG=^<board^>:^<config^> -GNinja
+  echo.
+  echo   Step 3 - Open the GUI Kconfig editor ^(uses Python Tkinter, no extra install^):
+  echo     cmake --build build --target menuconfig
+  echo.
+  echo   Step 4 - Build:
+  echo     cmake --build build
+)
+
+echo.
+echo   NOTE: windows-curses is NOT needed when using the CMake workflow above.
+echo   It is only needed if you run "menuconfig Kconfig" directly from the terminal.
 goto End
 
 :HaveCc
