@@ -101,13 +101,68 @@ rem Check if we have to build configure.exe
 
 if exist configure.exe goto :HaveConfigureExe
 
-set cc=mingw32-gcc.exe
+rem Auto-detect an available GCC (try gcc.exe first for MSYS2/MinGW-w64,
+rem then fall back to the legacy mingw32-gcc.exe)
+
+set cc=
 set cflags=-Wall -Wstrict-prototypes -Wshadow -g -I. -DCONFIG_WINDOWS_NATIVE=y
+
+where gcc.exe >nul 2>&1
+if not errorlevel 1 (
+  set cc=gcc.exe
+  goto :HaveCc
+)
+
+where mingw32-gcc.exe >nul 2>&1
+if not errorlevel 1 (
+  set cc=mingw32-gcc.exe
+  goto :HaveCc
+)
+
+echo ERROR: No suitable C compiler found.
+echo configure.c requires a GCC-compatible compiler (gcc.exe or mingw32-gcc.exe).
+echo configure.c cannot be compiled by MSVC (cl.exe) due to POSIX-only headers.
+echo.
+echo Use the CMake-based workflow instead (works with MSVC, MinGW-w64, and no MSYS2):
+echo.
+echo   Step 1 - Install Python kconfiglib (required for all platforms):
+echo     pip install kconfiglib
+echo.
+
+where cl.exe >nul 2>&1
+if not errorlevel 1 (
+  echo   Step 2 - Configure with CMake using the Visual Studio generator:
+  echo     ^(choose -A x64 for 64-bit target or -A Win32 for 32-bit target^)
+  echo     cmake -B build -DBOARD_CONFIG=^<board^>:^<config^> -G"Visual Studio 17 2022" -A x64
+  echo     cmake -B build -DBOARD_CONFIG=^<board^>:^<config^> -G"Visual Studio 17 2022" -A Win32
+  echo.
+  echo   Step 3 - Open the GUI Kconfig editor ^(uses Python Tkinter, no extra install^):
+  echo     cmake --build build --target menuconfig
+  echo.
+  echo   Step 4 - Build:
+  echo     cmake --build build
+) else (
+  echo   Step 2 - Configure with CMake ^(install Ninja or use -G"Ninja"^):
+  echo     cmake -B build -DBOARD_CONFIG=^<board^>:^<config^> -GNinja
+  echo.
+  echo   Step 3 - Open the GUI Kconfig editor ^(uses Python Tkinter, no extra install^):
+  echo     cmake --build build --target menuconfig
+  echo.
+  echo   Step 4 - Build:
+  echo     cmake --build build
+)
+
+echo.
+echo   NOTE: windows-curses is NOT needed when using the CMake workflow above.
+echo   It is only needed if you run "menuconfig Kconfig" directly from the terminal.
+goto End
+
+:HaveCc
 echo %cc% %cflags% -o configure.exe configure.c cfgparser.c
 %cc% %cflags% -o configure.exe configure.c cfgparser.c
 if errorlevel 1 (
   echo ERROR: %cc% failed
-  echo Is mingw32-gcc.exe installed?  Is it in the PATH variable?
+  echo Is %cc% installed?  Is it in the PATH variable?
   goto End
 )
 
@@ -123,7 +178,8 @@ echo Missing ^<board-name^>:^<config-name^> argument
 :ShowUsage
 echo USAGE: %0 [-d] [-E] [-e] [-b|f] [-a ^<app-dir^>] ^<board-name^>:^<config-name^>
 echo        %0 [-h]
-echo\nWhere:
+echo.
+echo Where:
 echo  -d:
 echo    Enables debug output
 echo  -E:
